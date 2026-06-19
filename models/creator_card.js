@@ -1,5 +1,5 @@
 // @ts-check
-const { ModelSchema, SchemaTypes, DatabaseModel } = require('../core/mongoose');
+const { ModelSchema, SchemaTypes, DatabaseModel } = require('@app-core/mongoose');
 
 const modelName = 'creator_cards';
 
@@ -40,4 +40,4 @@ const modelSchema = new ModelSchema(schemaConfig, { collection: modelName });
 
 modelSchema.index({ creator_reference: 1, status: 1 });
 
-modules.export = DatabaseModel.model(modelName, modelSchema, { paranoid: true });
+module.exports = DatabaseModel.model(modelName, modelSchema, { paranoid: true });

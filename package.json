@@ -14,6 +14,16 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "mongoose": "^9.7.1",
-    "ulid": "^3.0.2"
+    "ulid": "^3.0.2",
+    "@app-core/errors": "file:core/errors",
+    "@app-core/http-request": "file:core/http-request",
+    "@app-core/logger": "file:core/logger",
+    "@app-core/mongoose": "file:core/mongoose",
+    "@app-core/security": "file:core/security",
+    "@app-core/server": "file:core/express",
+    "@app-core/validator": "file:core/validator-vsl",
+    "@app/models": "file:models",
+    "@app/services": "file:services",
+    "@app/serializers": "file:serializers"
   }
 }

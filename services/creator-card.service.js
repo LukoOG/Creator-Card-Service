@@ -11,35 +11,44 @@ const { serializeCard } = require('@app/serializers/serialize_card');
 // manually below — the DSL has no syntax for those.
 
 const createCardSpec = validator.parse(`root {
-  title is a required string {
+  title {
+    is a required string
     is displayed in error messages as: Title
     is between 3 and 100
   }
-  description is a string {
+  description {
+    is a string
     is displayed in error messages as: Description
     is between 1 and 500
   }
-  slug is a required string {
+  slug {
+    is a required string
     is displayed in error messages as: Slug
     is between 5 and 50
   }
-  creator_reference is a required string {
+  creator_reference {
+    is a required string
     is displayed in error messages as: Creator Reference
     is between 20 and 20
   }
-  links is an array {
+  links {
+    is an array
     is displayed in error messages as: Links
   }
-  service_rates is an object {
+  service_rates {
+    is an object
     is displayed in error messages as: Service Rates
   }
-  status is a string {
+  status {
+    is a string
     is displayed in error messages as: Status
   }
-  access_type is a string {
+  access_type {
+    is a string
     is displayed in error messages as: Access Type
   }
-  access_code is a string {
+  access_code {
+    is a string
     is displayed in error messages as: Access Code
   }
 }`);

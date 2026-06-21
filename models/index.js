@@ -1,4 +1,4 @@
-const CreatorCard = require('./creator_card');
+const CreatorCard = require('./creator_card.model');
 
 module.exports = {
   CreatorCard,

@@ -4,7 +4,7 @@ const { DataTypeVariants } = require('../constants');
 function getNodeAttribute(regexObj, syntaxMatch, key) {
   let returnValue = false;
 
-  if (typeof regexObj[key] === 'object' && syntaxMatch[regexObj[key].if?.matchIndex]) {
+  if (typeof regexObj[key] === 'object' && Boolean(regexObj[key].if?.matchIndex !== undefined)) {
     returnValue = true;
   } else if (typeof regexObj[key] === 'boolean') {
     returnValue = regexObj[key];

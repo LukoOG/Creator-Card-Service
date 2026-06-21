@@ -2,7 +2,7 @@
 const validator = require('@app-core/validator');
 const { throwAppError, ERROR_CODE } = require('@app-core/errors');
 const { ulid } = require('ulid');
-const CreatorCard = require('@app/models');
+const { CreatorCard } = require('@app/models');
 const { serializeCard } = require('@app/serializers/serialize_card');
 
 // ─── Validation Spec ──────────────────────────────────────────────────────────
@@ -10,16 +10,16 @@ const { serializeCard } = require('@app/serializers/serialize_card');
 // Enums, regex patterns, exact lengths, and cross-field rules are checked
 // manually below — the DSL has no syntax for those.
 
+// Only fields that are UNCONDITIONALLY required on every request go here.
+// Every field declared in this DSL is implicitly required — there is no
+// "optional" keyword — so optional/conditional fields (description, links,
+// service_rates, status, access_type, access_code) are deliberately left
+// OUT of the spec and validated manually below instead.
 const createCardSpec = validator.parse(`root {
   title {
     is a required string
     is displayed in error messages as: Title
     is between 3 and 100
-  }
-  description {
-    is a string
-    is displayed in error messages as: Description
-    is between 1 and 500
   }
   slug {
     is a required string
@@ -30,26 +30,6 @@ const createCardSpec = validator.parse(`root {
     is a required string
     is displayed in error messages as: Creator Reference
     is between 20 and 20
-  }
-  links {
-    is an array
-    is displayed in error messages as: Links
-  }
-  service_rates {
-    is an object
-    is displayed in error messages as: Service Rates
-  }
-  status {
-    is a string
-    is displayed in error messages as: Status
-  }
-  access_type {
-    is a string
-    is displayed in error messages as: Access Type
-  }
-  access_code {
-    is a string
-    is displayed in error messages as: Access Code
   }
 }`);
 
@@ -131,22 +111,29 @@ function validateServiceRates(serviceRates) {
  * @returns {Promise<Object>} Serialized creator card
  */
 async function createCreatorCardService(payload) {
-  // 1. Structural validation — presence, types, between ranges
-  const validated = validator.validate(payload, createCardSpec);
+  // 1. Structural validation for the unconditionally-required fields only.
+  // (title, slug, creator_reference — type + length checked by the DSL)
+  const { title, slug, creator_reference } = validator.validate(payload, createCardSpec);
 
+  // Everything else is optional/conditional, so it's pulled straight from
+  // the raw payload and validated manually below.
   const {
-    title,
     description = '',
-    slug,
-    creator_reference,
     links = [],
     service_rates = null,
     status = 'draft',
     access_type = 'public',
     access_code = null,
-  } = validated;
+  } = payload;
 
   // 2. Manual validation — enums, regex, exact lengths, cross-field rules
+
+  if (description && typeof description !== 'string') {
+    throwAppError('description must be a string', ERROR_CODE.INVLDDATA);
+  }
+  if (description && description.length > 500) {
+    throwAppError('description must not exceed 500 characters', ERROR_CODE.INVLDDATA);
+  }
 
   if (!SLUG_REGEX.test(slug)) {
     throwAppError(
@@ -181,6 +168,9 @@ async function createCreatorCardService(payload) {
     throwAppError('access_code should not be provided when access_type is public', ERROR_CODE.INVLDDATA);
   }
 
+  // Normalize: public cards always store null, never an empty string
+  const normalizedAccessCode = access_type === 'private' ? access_code : null;
+
   validateLinks(links);
   validateServiceRates(service_rates);
 
@@ -198,7 +188,7 @@ async function createCreatorCardService(payload) {
       service_rates,
       status,
       access_type,
-      access_code,
+      access_code: normalizedAccessCode,
       created: now,
       updated: now,
     });

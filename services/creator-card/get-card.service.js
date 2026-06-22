@@ -2,12 +2,6 @@
 const { CreatorCard } = require('@app/models');
 const { serializeCard } = require('@app/serializers');
 
-/**
- * Custom domain error codes for this endpoint, per the PRD.
- * These are NOT part of @app-core/errors' ERROR_CODE enum, so we can't
- * rely on the server's generic errorCodeMappings — we resolve the HTTP
- * status ourselves and return it directly from the handler.
- */
 const ACCESS_ERROR = {
   CARD_NOT_FOUND: { status: 404, errorCode: 'NF01', message: 'Creator card not found' },
   CARD_IS_DRAFT: { status: 404, errorCode: 'NF02', message: 'Creator card not found' },
@@ -30,7 +24,7 @@ const ACCESS_ERROR = {
  * @param {Object} params
  * @param {string} params.slug
  * @param {string} [params.access_code]
- * @returns {Promise<{ok: boolean, status: number, errorCode?: string, message: string, data?: Object}>}
+ * @returns {Promise<{ok: boolean, status: string, errorCode?: string, message: string, data?: Object}>}
  */
 async function getCreatorCardService({ slug, access_code }) {
   // deleted: 0 means active (paranoid mode sentinel — see model)
@@ -60,8 +54,8 @@ async function getCreatorCardService({ slug, access_code }) {
   // 5. Access granted
   return {
     ok: true,
-    status: 200,
-    message: 'Creator card retrieved',
+    status: "success",
+    message: 'Creator Card Retrieved Successfully.',
     data: serializeCard(card),
   };
 }

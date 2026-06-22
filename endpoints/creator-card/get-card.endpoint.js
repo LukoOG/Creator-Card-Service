@@ -23,7 +23,7 @@ module.exports = createHandler({
             return {
                 status: result.status,
                 message: result.message,
-                data: { errorCode: result.errorCode },
+                data: { error: result.errorCode },
             };
         }
 

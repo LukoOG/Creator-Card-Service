@@ -13,7 +13,7 @@
 function serializeCard(doc) {
   const raw = typeof doc.toObject === 'function' ? doc.toObject() : { ...doc };
  
-  const { _id, deleted, ...rest } = raw;
+  const { _id, deleted, access_code, __v, ...rest } = raw;
  
   return {
     id: _id,

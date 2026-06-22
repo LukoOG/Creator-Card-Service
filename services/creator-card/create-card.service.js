@@ -21,18 +21,21 @@ const createCardSpec = validator.parse(`root {
     is displayed in error messages as: Title
     is between 3 and 100
   }
-  slug {
-    is a required string
-    is displayed in error messages as: Slug
-    is between 5 and 50
-  }
   creator_reference {
     is a required string
     is displayed in error messages as: Creator Reference
     is between 20 and 20
   }
 }`);
+// ─── Errors ────────────────────────────────────────────────────────────────
 
+const CREATE_ERROR = {
+  SLUG_TAKEN: {
+    status: "error",
+    errorCode: 'SL02',
+    message: 'The slug is already taken',
+  },
+};
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const VALID_STATUSES = ['draft', 'published'];
@@ -41,6 +44,21 @@ const VALID_CURRENCIES = ['NGN', 'USD', 'GBP', 'GHS'];
 const SLUG_REGEX = /^[a-zA-Z0-9_-]+$/;
 const ACCESS_CODE_REGEX = /^[a-zA-Z0-9]{6}$/;
 const URL_REGEX = /^https?:\/\//i;
+
+// ─── Slug Generation ────────────────────────────────────────────────────────────────
+function generateSlug(title) {
+  const base = title
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 43);
+
+  // 6-char alphanumeric suffix (from the tail of a ULID) keeps slugs unique
+  // without requiring a DB round-trip to check for collisions upfront.
+  const suffix = ulid().slice(-6).toLowerCase();
+  return `${base}-${suffix}`;
+}
 
 // ─── Manual Validators ────────────────────────────────────────────────────────
 
@@ -108,16 +126,17 @@ function validateServiceRates(serviceRates) {
 /**
  * Creates a new creator card.
  * @param {Object} payload - Raw request body
- * @returns {Promise<Object>} Serialized creator card
+ * @returns {Promise<{ok: boolean, status: string, errorCode?: string, message: string, data?: Object}>}
  */
 async function createCreatorCardService(payload) {
   // 1. Structural validation for the unconditionally-required fields only.
   // (title, slug, creator_reference — type + length checked by the DSL)
-  const { title, slug, creator_reference } = validator.validate(payload, createCardSpec);
+  const { title, creator_reference } = validator.validate(payload, createCardSpec);
 
   // Everything else is optional/conditional, so it's pulled straight from
   // the raw payload and validated manually below.
   const {
+    slug: rawSlug,
     description = '',
     links = [],
     service_rates = null,
@@ -127,6 +146,25 @@ async function createCreatorCardService(payload) {
   } = payload;
 
   // 2. Manual validation — enums, regex, exact lengths, cross-field rules
+  // Validate provided slug, or auto-generate one from the title
+  let slug;
+  if (rawSlug) {
+    if (typeof rawSlug !== 'string') {
+      throwAppError('slug must be a string', ERROR_CODE.INVLDDATA);
+    }
+    if (rawSlug.length < 5 || rawSlug.length > 50) {
+      throwAppError('slug must be between 5 and 50 characters', ERROR_CODE.INVLDDATA);
+    }
+    if (!SLUG_REGEX.test(rawSlug)) {
+      throwAppError(
+        'slug may only contain letters, numbers, hyphens and underscores',
+        ERROR_CODE.INVLDDATA
+      );
+    }
+    slug = rawSlug;
+  } else {
+    slug = generateSlug(title);
+  }
 
   if (description && typeof description !== 'string') {
     throwAppError('description must be a string', ERROR_CODE.INVLDDATA);
@@ -194,11 +232,17 @@ async function createCreatorCardService(payload) {
     });
 
     // 4. Serialize: _id → id, deleted: 0 → null
-    return serializeCard(card);
+    return {
+      ok: true,
+      status: "success",
+      message: 'Creator Card Created Successfully.',
+      data: serializeCard(card),
+    };
   } catch (error) {
     // Mongoose duplicate key error (slug collision)
     if (error.code === 11000) {
-      throwAppError('A creator card with this slug already exists', ERROR_CODE.DUPLRCRD);
+      // throwAppError('A creator card with this slug already exists', ERROR_CODE.DUPLRCRD);
+      return { ok: false, ...CREATE_ERROR.SLUG_TAKEN };
     }
     throw error;
   }

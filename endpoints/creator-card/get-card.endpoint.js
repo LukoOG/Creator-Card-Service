@@ -19,18 +19,10 @@ module.exports = createHandler({
 
         const result = await getCreatorCardService({ slug, access_code });
 
-        if (!result.ok) {
-            return {
-                status: result.status,
-                message: result.message,
-                data: { error: result.errorCode },
-            };
-        }
-
         return {
             status: helpers.http_statuses.HTTP_200_OK,
-            message: result.message,
-            data: result.data,
+            message: "Creator Card Retrieved Successfully.",
+            data: result,
         };
     },
 

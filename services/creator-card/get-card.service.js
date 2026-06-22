@@ -1,21 +1,26 @@
 // @ts-check
 const { CreatorCard } = require('@app/models');
 const { serializeCard } = require('@app/serializers');
+const { throwAppError, ERROR_CODE } = require('@app-core/errors');
 
 const ACCESS_ERROR = {
-  CARD_NOT_FOUND: { status: 404, errorCode: 'NF01', message: 'Creator card not found' },
-  CARD_IS_DRAFT: { status: 404, errorCode: 'NF02', message: 'Creator card not found' },
-  ACCESS_CODE_REQUIRED: {
-    status: 403,
-    errorCode: 'AC03',
-    message: 'This card is private. An access_code is required',
-  },
-  ACCESS_CODE_INVALID: {
-    status: 403,
-    errorCode: 'AC04',
-    message: 'The supplied access_code is invalid',
-  },
+  CARD_NOT_FOUND:        { errorCode: ERROR_CODE.NOTFOUND,  code: 'NF01', message: 'Creator card not found' },
+  CARD_IS_DRAFT:         { errorCode: ERROR_CODE.NOTFOUND,  code: 'NF02', message: 'Creator card not found' },
+  ACCESS_CODE_REQUIRED:  { errorCode: ERROR_CODE.INVLDREQ, code: 'AC03', message: 'This card is private. An access_code is required' },
+  ACCESS_CODE_INVALID:   { errorCode: ERROR_CODE.INVLDREQ, code: 'AC04', message: 'The supplied access_code is invalid' },
 };
+
+/**
+ * Convenience wrapper — throws with the correct HTTP status and business code.
+ * Response shape:
+ * { status: "error", message, errors: "NF01"  }
+ *
+ * @param {{ errorCode: string, code: string, message: string }} errorDef
+ */
+function throwAccessError({ errorCode, code, message }) {
+  throwAppError(message, errorCode, { details:  code , context: undefined });
+}
+
 
 /**
  * Retrieves a single published creator card by slug, enforcing
@@ -24,40 +29,27 @@ const ACCESS_ERROR = {
  * @param {Object} params
  * @param {string} params.slug
  * @param {string} [params.access_code]
- * @returns {Promise<{ok: boolean, status: string, errorCode?: string, message: string, data?: Object}>}
+ * @returns {Promise<Object>}
  */
 async function getCreatorCardService({ slug, access_code }) {
   // deleted: 0 means active (paranoid mode sentinel — see model)
   const card = await CreatorCard.findOne({ slug, deleted: 0 });
 
   // 1. No card with that slug
-  if (!card) {
-    return { ok: false, ...ACCESS_ERROR.CARD_NOT_FOUND };
-  }
+  if (!card) throwAccessError(ACCESS_ERROR.CARD_NOT_FOUND);
 
   // 2. Card exists but is a draft — distinct code from "doesn't exist"
-  if (card.status === 'draft') {
-    return { ok: false, ...ACCESS_ERROR.CARD_IS_DRAFT };
-  }
+  if (card.status === 'draft') throwAccessError(ACCESS_ERROR.CARD_IS_DRAFT)
 
   // 3 & 4. Private card access control
   if (card.access_type === 'private') {
-    if (!access_code) {
-      return { ok: false, ...ACCESS_ERROR.ACCESS_CODE_REQUIRED };
-    }
+    if (!access_code) throwAccessError(ACCESS_ERROR.ACCESS_CODE_REQUIRED)
 
-    if (access_code !== card.access_code) {
-      return { ok: false, ...ACCESS_ERROR.ACCESS_CODE_INVALID };
-    }
+    if (access_code !== card.access_code) throwAccessError(ACCESS_ERROR.ACCESS_CODE_INVALID)
   }
 
   // 5. Access granted
-  return {
-    ok: true,
-    status: "success",
-    message: 'Creator Card Retrieved Successfully.',
-    data: serializeCard(card),
-  };
+  return serializeCard(card)
 }
 
 module.exports = getCreatorCardService;

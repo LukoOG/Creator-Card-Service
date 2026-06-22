@@ -20,18 +20,10 @@ module.exports = createHandler({
 
         const result = await deleteCreatorCardService({ slug, payload });
 
-        if (!result.ok) {
-            return {
-                status: result.status,
-                message: result.message,
-                data: { errorCode: result.errorCode },
-            };
-        }
-
         return {
             status: helpers.http_statuses.HTTP_200_OK,
-            message: result.message,
-            data: result.data,
+            message: "Creator Card Deleted Successfully.",
+            data: result,
         };
     },
 

@@ -23,7 +23,7 @@ const deleteCardSpec = validator.parse(`root {
  * @param {Object} params
  * @param {string} params.slug
  * @param {Object} params.payload - Request body
- * @returns {Promise<{ok: boolean, status: number, errorCode?: string, message: string, data?: Object}>}
+ * @returns {Promise<Object>}
  */
 async function deleteCreatorCardService({ slug, payload }) {
   // 1. Validate body — creator_reference presence and exact length
@@ -33,7 +33,7 @@ async function deleteCreatorCardService({ slug, payload }) {
   const card = await CreatorCard.findOne({ slug, deleted: 0 });
 
   if (!card) {
-    return { ok: false, status: 404, errorCode: 'NF01', message: 'Creator card not found' };
+    throwAppError("Creator Card not found", ERROR_CODE.NOTFOUND, { details: "NF01", context: undefined })
   }
 
   // 3. Ownership check — the requester must be the card's creator.
@@ -53,12 +53,7 @@ async function deleteCreatorCardService({ slug, payload }) {
   await card.save();
 
   // 5. Return the deleted card in full — same shape as the create response
-  return {
-    ok: true,
-    status: 200,
-    message: 'Creator Card Deleted Successfully.',
-    data: serializeCard(card),
-  };
+  return serializeCard(card);
 }
 
 module.exports = deleteCreatorCardService;

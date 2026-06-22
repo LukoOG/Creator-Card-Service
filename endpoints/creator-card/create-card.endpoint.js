@@ -17,18 +17,10 @@ module.exports = createHandler({
 
     const result = await createCreatorCardService(payload);
 
-    if (!result.ok) {
-      return {
-        status: result.status,
-        message: result.message,
-        error: result.errorCode,
-      };
-    }
-
     return {
       status: helpers.http_statuses.HTTP_201_CREATED,
       message: 'Creator card created successfully',
-      data: result.data,
+      data: result,
     };
   },
 

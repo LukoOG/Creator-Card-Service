@@ -1,6 +1,8 @@
 // @ts-check
 const validator = require('@app-core/validator');
-const { throwAppError, ERROR_CODE } = require('@app-core/errors');
+const { ERROR_CODE, throwAppError } = require('@app-core/errors');
+
+const { CARD_ERRORS, throwBusinessError } = require('@app/errors');
 const { ulid } = require('ulid');
 const { CreatorCard } = require('@app/models');
 const { serializeCard } = require('@app/serializers/serialize_card');
@@ -126,7 +128,7 @@ function validateServiceRates(serviceRates) {
 /**
  * Creates a new creator card.
  * @param {Object} payload - Raw request body
- * @returns {Promise<{ok: boolean, status: string, errorCode?: string, message: string, data?: Object}>}
+ * @returns {Promise<Object>}
  */
 async function createCreatorCardService(payload) {
   // 1. Structural validation for the unconditionally-required fields only.
@@ -194,7 +196,7 @@ async function createCreatorCardService(payload) {
   // access_code is required when access_type is private
   if (access_type === 'private') {
     if (!access_code) {
-      throwAppError('access_code is required when access_type is private', ERROR_CODE.INVLDDATA);
+      throwBusinessError(CARD_ERRORS.ACCESS_CODE_REQUIRED)
     }
     if (!ACCESS_CODE_REGEX.test(access_code)) {
       throwAppError('access_code must be exactly 6 alphanumeric characters', ERROR_CODE.INVLDDATA);
@@ -203,7 +205,7 @@ async function createCreatorCardService(payload) {
 
   // access_code must not be set on public cards
   if (access_type === 'public' && access_code) {
-    throwAppError('access_code should not be provided when access_type is public', ERROR_CODE.INVLDDATA);
+    throwBusinessError(CARD_ERRORS.ACCESS_CODE_ON_PUBLIC);
   }
 
   // Normalize: public cards always store null, never an empty string
@@ -232,17 +234,12 @@ async function createCreatorCardService(payload) {
     });
 
     // 4. Serialize: _id → id, deleted: 0 → null
-    return {
-      ok: true,
-      status: "success",
-      message: 'Creator Card Created Successfully.',
-      data: serializeCard(card),
-    };
+    return serializeCard(card);
   } catch (error) {
     // Mongoose duplicate key error (slug collision)
     if (error.code === 11000) {
       // throwAppError('A creator card with this slug already exists', ERROR_CODE.DUPLRCRD);
-      return { ok: false, ...CREATE_ERROR.SLUG_TAKEN };
+      throwBusinessError(CARD_ERRORS.SLUG_TAKEN);
     }
     throw error;
   }

@@ -5,12 +5,13 @@ Test Cases passed
  - [x] Case 4
  - [x] Case 5
  - [x] Case 6
- - [ ] Case 7
- - [ ] Case 8
- - [ ] Case 10
- - [ ] Case 11
- - [ ] Case 12
- - [ ] Case 13
+ - [x] Case 7
+ - [x] Case 8
+ - [x] Case 9
+ - [x] Case 10
+ - [x] Case 11
+ - [x] Case 12
+ - [x] Case 13
  - [x] Case 14
  - [x] Case 15
  - [x] Case 16

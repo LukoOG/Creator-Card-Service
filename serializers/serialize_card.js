@@ -10,7 +10,7 @@
  * @param {Object} doc - A Mongoose document or plain object (e.g. from .lean())
  * @returns {Object} - API-safe representation
  */
-function serializeCard(doc) {
+function serializeCard(doc, includeAccessCode = false) {
   const raw = typeof doc.toObject === 'function' ? doc.toObject() : { ...doc };
  
   const { _id, deleted, access_code, __v, ...rest } = raw;
@@ -18,6 +18,7 @@ function serializeCard(doc) {
   return {
     id: _id,
     ...rest,
+    ...(includeAccessCode && { access_code }),
     deleted: deleted === 0 ? null : deleted,
   };
 }

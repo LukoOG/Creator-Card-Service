@@ -14,13 +14,14 @@ const CARD_ERRORS = {
   CARD_IS_DRAFT:        { errorCode: ERROR_CODE.NOTFOUND,  code: 'NF02', message: 'Creator card not found' },
 
   // ── Access control ─────────────────────────────────────────────────────────
-  ACCESS_CODE_REQUIRED: { errorCode: ERROR_CODE.INVLDDATA, code: 'AC01', message: 'access_code is required when access_type is private' },
-  ACCESS_CODE_ON_PUBLIC:{ errorCode: ERROR_CODE.INVLDDATA, code: 'AC05', message: 'access_code can only be set on private cards' },
-  ACCESS_CODE_MISSING:  { errorCode: ERROR_CODE.INVLDDATA, code: 'AC03', message: 'This card is private. An access_code is required' },
-  ACCESS_CODE_INVALID:  { errorCode: ERROR_CODE.INVLDDATA, code: 'AC04', message: 'Invalid access code' },
+  ACCESS_CODE_REQUIRED: { errorCode: ERROR_CODE.INVLDREQ, code: 'AC01', message: 'access_code is required when access_type is private' },
+  ACCESS_CODE_ON_PUBLIC:{ errorCode: ERROR_CODE.INVLDREQ, code: 'AC05', message: 'access_code can only be set on private cards' },
+  ACCESS_CODE_MISSING:  { errorCode: ERROR_CODE.INVLDREQ, code: 'AC03', message: 'This card is private. An access_code is required' },
+  ACCESS_CODE_INVALID:  { errorCode: ERROR_CODE.INVLDREQ, code: 'AC04', message: 'Invalid access code' },
 
   // ── Slug ───────────────────────────────────────────────────────────────────
-  SLUG_TAKEN:           { errorCode: ERROR_CODE.DUPLRCRD,  code: 'SL02', message: 'Slug is already taken' },
+  //Petition to throw Duplicate Record error instead of simple 400
+  SLUG_TAKEN:           { errorCode: ERROR_CODE.INVLDDATA,  code: 'SL02', message: 'Slug is already taken' },
 };
 
 /**

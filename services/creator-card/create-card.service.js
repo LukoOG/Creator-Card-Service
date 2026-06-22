@@ -183,7 +183,8 @@ async function createCreatorCardService(payload) {
   }
 
   if (status && !VALID_STATUSES.includes(status)) {
-    throwAppError(`status must be one of: ${VALID_STATUSES.join(', ')}`, ERROR_CODE.INVLDDATA);
+    // throwAppError(`status must be one of: ${VALID_STATUSES.join(', ')}`, ERROR_CODE.INVLDDATA);
+    throwAppError(`'${status}' is not a valid status`, ERROR_CODE.INVLDDATA);
   }
 
   if (access_type && !VALID_ACCESS_TYPES.includes(access_type)) {
@@ -234,7 +235,8 @@ async function createCreatorCardService(payload) {
     });
 
     // 4. Serialize: _id → id, deleted: 0 → null
-    return serializeCard(card);
+    let includeAccessCode = access_type === "private" ? true : false;
+    return serializeCard(card, includeAccessCode);
   } catch (error) {
     // Mongoose duplicate key error (slug collision)
     if (error.code === 11000) {

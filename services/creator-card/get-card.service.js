@@ -26,7 +26,7 @@ async function getCreatorCardService({ slug, access_code }) {
 
   // 3 & 4. Private card access control
   if (card.access_type === 'private') {
-    if (!access_code) throwBusinessError(CARD_ERRORS.ACCESS_CODE_REQUIRED);
+    if (!access_code) throwBusinessError(CARD_ERRORS.ACCESS_CODE_MISSING);
 
     if (access_code !== card.access_code) throwBusinessError(CARD_ERRORS.ACCESS_CODE_INVALID);
   }
